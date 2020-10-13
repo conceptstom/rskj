@@ -22,6 +22,7 @@ import co.rsk.bitcoinj.core.*;
 import co.rsk.core.RskAddress;
 import co.rsk.crypto.Keccak256;
 import co.rsk.peg.bitcoin.CoinbaseInformation;
+import co.rsk.peg.fastBridge.FastBridgeFederationP2SH;
 import co.rsk.peg.whitelist.OneOffWhiteListEntry;
 import co.rsk.peg.whitelist.UnlimitedWhiteListEntry;
 import org.apache.commons.lang3.tuple.Pair;
@@ -740,6 +741,33 @@ public class BridgeSerializationUtils {
         }
         byte[][] rlpElements = new byte[1][];
         rlpElements[0] = RLP.encodeElement(coinbaseInformation.getWitnessMerkleRoot().getBytes());
+        return RLP.encodeList(rlpElements);
+    }
+
+    public static FastBridgeFederationP2SH deserializeFederationBridge(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        RLPList rlpList = (RLPList)RLP.decode2(data).get(0);
+
+        if (rlpList.size() != 2) {
+            throw new RuntimeException(String.format("Invalid serialized Federation Bridge: expected 2 value but got %n", rlpList.size()));
+        }
+
+        byte[] fastBridgeFederationP2SH = rlpList.get(0).getRLPData();
+        byte[] federationP2SH = rlpList.get(1).getRLPData();
+
+        return new FastBridgeFederationP2SH(fastBridgeFederationP2SH, federationP2SH);
+    }
+
+    public static byte[] serializeFederationBridge(FastBridgeFederationP2SH fastBridgeFederationP2SH) {
+        if (fastBridgeFederationP2SH == null) {
+            return null;
+        }
+        byte[][] rlpElements = new byte[2][];
+        rlpElements[0] = RLP.encodeElement(fastBridgeFederationP2SH.getFastBridgeFederationP2SH());
+        rlpElements[1] = RLP.encodeElement(fastBridgeFederationP2SH.getFederationP2SH());
+
         return RLP.encodeList(rlpElements);
     }
 
